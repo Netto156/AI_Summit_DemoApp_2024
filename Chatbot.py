@@ -1,12 +1,16 @@
 from openai import OpenAI
 import streamlit as st
+import re
 import time
-
+from email.message import EmailMessage
+import smtplib
 # python -m streamlit run Chatbot.py
 
-# Set Keys
+# Set constants
 MODEL_ID = st.secrets["model_id"]
 API_KEY = st.secrets["api_key"]
+EMAIL_PW = st.secrets["email_pw"]
+EMAIL_SENDER = st.secrets["email"]
 
 #  ------------------------ Logic ---------------------------------------------
 @st.cache_resource
@@ -26,10 +30,29 @@ def create_new_thread():
 
 
 def validate_user_input():
-    if len(st.session_state['email']) > 3:
-        st.session_state['Valid_input'] = True
-    else:
-        st.session_state['Valid_input'] = False
+    data_valid = True
+
+    # Validate email
+    if data_valid:
+        if not re.match(r"^\S+@\S+\.\S+$", st.session_state['email']):
+            data_valid = False
+
+    # Validate first name
+    if data_valid:
+        data_valid = len(st.session_state['first_name']) >= 2
+
+    # Validate last name
+    if data_valid:
+        data_valid = len(st.session_state['last_name']) >= 3
+
+    # Validate company
+    if data_valid:
+        data_valid = len(st.session_state['Company']) >= 3
+
+    # DEBUG
+    data_valid = True
+    # Assign output
+    st.session_state['Valid_input'] = data_valid
     return
 
 
@@ -64,6 +87,19 @@ def query_assistant(user_input):
     
     return(GPT_response) 
 
+
+def mail_conversation():
+    print(st.session_state)
+    if st.session_state["mail_my_result"] == "Yes":
+        print("Sending conversation per mail...")
+        email = st.session_state.email
+        print(email)
+        conversation = ""
+        for m in st.session_state['messages']:
+            conversation += "--{0} : {1} \n\n".format(m["role"], m["content"])
+        # send_email(email, conversation)
+    return
+
 # ---------------------------------- UI Functions --------------------------------------------
 
 def get_user_info():
@@ -88,17 +124,24 @@ def get_user_info():
     return
 
 
-# TODO: Make this fuction work --> send the whole conversation to this person by email
-def mail_conversation():
-    if st.session_state["mail_my_result"] == "Yes":
-        print("Sending conversation per mail...")
-        email = st.session_state.email
-        print(email)
-        conversation = ""
-        for m in st.session_state['messages']:
-            conversation += "--{0} : {1} \n\n".format(m["role"], m["content"])
-        print(conversation)
-    return
+def send_email(recipient, message):
+    print("sneding mail to: "+ recipient)
+    sender = EMAIL_SENDER
+    password = EMAIL_PW
+
+    message = """Incentro thanks you for your interest in their demo at the UiPath AI summit.\nHereby you receive a copy of your conversation with our chatbot.\n\n""" + message + """\n\nPlease feel welcome to reach out.\n\nWith kind regards the AI-summit-bot @ incentrp"""
+
+    email = EmailMessage()
+    email["From"] = sender
+    email["To"] = recipient
+    email["Subject"] = "Recap of conversation with chatbot demo of Incentro - UiPath AI summit"
+    email.set_content(message)
+
+    with smtplib.SMTP("smtp-mail.outlook.com", port=587) as smtp:
+        smtp.starttls()
+        smtp.login(sender, password)
+        smtp.sendmail(sender, recipient, email.as_string())
+        smtp.quit()
 
 
 def end_the_conversation():
@@ -108,6 +151,7 @@ def end_the_conversation():
         col1, col2 = st.columns(2)
         with col1:
             st.radio("Did you like this tool?", ["Yes", "No"], key="liked")
+            print(st.session_state)
 
         with col2:
             # st.radio("Would you like to get in contact with Incentro", ["Yes", "Maybe", "No"], key="contact_me")
@@ -116,6 +160,7 @@ def end_the_conversation():
         submit_button = st.form_submit_button("Submit")
         if submit_button:
             placeholder.empty()
+    print(st.session_state)
     st.session_state['Conversation_ended'] = True
 
 
@@ -142,7 +187,7 @@ if "Valid_input" not in st.session_state:
     st.session_state['Form_count'] = 0
     create_new_thread()
 
-
+# Get user input before starting the chat
 if st.session_state['Valid_input'] == False:
     if st.session_state['Form_count'] > 0:
         get_user_info()
@@ -151,18 +196,24 @@ if st.session_state['Valid_input'] == False:
         get_user_info()
 
 
+# Start chat with user
 if st.session_state['Valid_input'] and not st.session_state['Conversation_ended']:
     if "messages" not in st.session_state:
         st.session_state["messages"] = [{"role": "assistant", "content": "Hi {0}, I'd like to help you discovery your automation potential. In what branch do you work?".format(st.session_state.first_name)}]
 
+    # write chat messages
     for msg in st.session_state.messages:
         st.chat_message(msg["role"]).write(msg["content"])
 
+    # Get user input 
     if prompt := st.chat_input():
-
         st.session_state.messages.append({"role": "user", "content": prompt})
         st.chat_message("user").write(prompt)
-        msg = query_assistant(prompt)
+
+        # Display loading symbol while getting response from gpt-model
+        with st.spinner('Thinking...'):
+            msg = query_assistant(prompt)
+        
         st.session_state.messages.append({"role": "assistant", "content": msg})
         st.chat_message("assistant").write(msg)
 
