@@ -13,57 +13,9 @@ API_KEY = st.secrets["api_key"]
 EMAIL_PW = st.secrets["email_pw"]
 EMAIL_SENDER = st.secrets["email"]
 
-# -----------------------------------------------------------------------------
-
-MAIN_CSS = """
-    div[data-testid="stFullScreenFrame"] > div {
-        justify-content: center;
-    }
-
-    div.CenterElem {
-        text-align: center;
-    }
-
-    div.FormHeader {
-        text-align: center;
-        font-size: x-large;
-        color: #fe5000;
-        font-weight: bolder;
-        padding:30px;
-    }
-
-    h1 {
-        text-align: center;
-    }
-
-    p {
-        font-family: sans-serif;
-        font-size: large;
-    }
-
-    
-    div[data-testid="stLinkButton"] p {
-        font-weight: bolder;
-        font-size: medium;
-        color:#000;
-    }
-
-    div[data-testid="stFormSubmitButton"] p,
-    div[data-testid="stTextInput"] p,
-    div[data-testid="stButton"] p,
-    div[data-testid="stRadio"] > label p  {
-        font-weight: bolder;
-        font-size: large;
-        color:#000;
-    }
-
-    div.FormBox{
-        border: 1px solid rgba(49, 51, 63, 0.2);
-        border-radius: 0.5rem;
-        padding: calc(1em - 1px);
-    }
-"""
-
+# Get CSS styling
+with open( "app\style.css" ) as css:
+    MAIN_CSS = css.read()
 
 #  ------------------------ Logic ---------------------------------------------
 @st.cache_resource
@@ -98,8 +50,6 @@ def validate_user_input():
     if data_valid:
         data_valid = len(st.session_state['last_name']) >= 3
 
-    # DEBUG
-    data_valid = True
     # Assign output
     st.session_state['Valid_input'] = data_valid
     return
@@ -193,9 +143,6 @@ def send_email(recipient, message):
 
 
 def end_the_conversation():
-    print("ending conv..")
-    # placeholder_for_radio1 = st.radio("Did you like this tool?", ["Yes", "No"], key="liked", index=None)
-    # placeholder_for_radio2 = st.radio("Would you like to receive a copy of the conversation per email?", ["Yes", "No"], horizontal=True, key="mail_my_result", index=None)
     st.markdown("""<div class='FormHeader'/>Feedback on the conversation""" , unsafe_allow_html=True)
     col1, col2 = st.columns(2)
     with col1:
@@ -204,9 +151,7 @@ def end_the_conversation():
     with col2:
         placeholder_for_radio2 = st.radio("Would you like to receive a copy of the conversation per email?", ["Yes", "No"], horizontal=True, key="mail_my_result", index=None)
     
-    print(st.session_state)
     if st.button("Submit"):
-        # placeholder.empty()
         st.session_state['Conversation_ended'] = True
         st.session_state['Ending_conversation'] = False
         st.rerun()
@@ -217,15 +162,15 @@ def conversation_ended():
         st.markdown("Thank you for your time, we hope you found this usefull")
         st.link_button("See other succes stories", "https://www.incentro.com/en")
     
-    # st.markdown("Thank you for your time, we hope you found this usefull")
-
-
 
 # This is needed to make sure you do not lose your session variables (pretty weird, I know....)
 for x,y in st.session_state.items():
     st.session_state[x] = y
 
+
 # ---------------------------------- UI Main page --------------------------------------------
+
+
 with stylable_container(key="main_page", css_styles=MAIN_CSS):
     st.image("https://0097f9ca.flyingcdn.com/wp-content/uploads/2022/04/Incentro-logo-2018-Orange-1024x174.png", width=200)
     st.title("Hyper Automation Discoverer")
@@ -267,8 +212,8 @@ if st.session_state['Valid_input'] and not st.session_state['Conversation_ended'
         st.chat_message("user").write(prompt)
 
         # Create new thread
-        # if not st.session_state['Thread_id']:
-            # create_new_thread()
+        if not st.session_state['Thread_id']:
+            create_new_thread()
 
 
         # Display loading symbol while getting response from gpt-model
