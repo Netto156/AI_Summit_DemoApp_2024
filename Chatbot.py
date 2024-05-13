@@ -13,9 +13,52 @@ API_KEY = st.secrets["api_key"]
 EMAIL_PW = st.secrets["email_pw"]
 EMAIL_SENDER = st.secrets["email"]
 
-# Get CSS styling
-with open( "./app/static/style.css" ) as css:
-    MAIN_CSS = css.read()
+MAIN_CSS = """ 
+    div[data-testid="stFullScreenFrame"] > div {
+            justify-content: center;
+        }
+
+    div.CenterElem {
+        text-align: center;
+    }
+
+    div.FormHeader {
+        text-align: center;
+        font-size: x-large;
+        color: #fe5000;
+        font-weight: bolder;
+        padding:30px;
+    }
+
+    h1 {
+        text-align: center;
+    }
+
+    p {
+        font-family: sans-serif;
+        font-size: large;
+    }
+
+    div[data-testid="stLinkButton"] p {
+        font-weight: bolder;
+        font-size: medium;
+        color:#000;
+    }
+
+    div[data-testid="stFormSubmitButton"] p,
+    div[data-testid="stTextInput"] p,
+    div[data-testid="stButton"] p,
+    div[data-testid="stRadio"] > label p  {
+        font-weight: bolder;
+        font-size: large;
+        color:#000;
+    }
+
+    div.FormBox{
+        border: 1px solid rgba(49, 51, 63, 0.2);
+        border-radius: 0.5rem;
+        padding: calc(1em - 1px);
+    }"""
 
 #  ------------------------ Logic ---------------------------------------------
 @st.cache_resource
