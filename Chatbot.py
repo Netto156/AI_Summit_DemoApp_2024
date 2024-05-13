@@ -12,6 +12,7 @@ MODEL_ID = st.secrets["model_id"]
 API_KEY = st.secrets["api_key"]
 EMAIL_PW = st.secrets["email_pw"]
 EMAIL_SENDER = st.secrets["email"]
+RUN_MODE = st.secrets["run_mode"]
 
 MAIN_CSS = """ 
     div[data-testid="stFullScreenFrame"] > div {
@@ -93,6 +94,7 @@ def validate_user_input():
     if data_valid:
         data_valid = len(st.session_state['last_name']) >= 3
 
+    data_valid=True
     # Assign output
     st.session_state['Valid_input'] = data_valid
     return
@@ -186,18 +188,19 @@ def send_email(recipient, message):
 
 
 def end_the_conversation():
-    st.markdown("""<div class='FormHeader'/>Feedback on the conversation""" , unsafe_allow_html=True)
-    col1, col2 = st.columns(2)
-    with col1:
-        placeholder_for_radio1 = st.radio("Did you like this tool?", ["Yes", "No"], key="liked", index=None)
+    with stylable_container(key="end_questions", css_styles=MAIN_CSS):
+        st.markdown("""<div class='FormHeader'/>Feedback on the conversation""" , unsafe_allow_html=True)
+        col1, col2 = st.columns(2)
+        with col1:
+            placeholder_for_radio1 = st.radio("Did you like this tool?", ["Yes", "No"], key="liked", index=None)
 
-    with col2:
-        placeholder_for_radio2 = st.radio("Would you like to receive a copy of the conversation per email?", ["Yes", "No"], horizontal=True, key="mail_my_result", index=None)
-    
-    if st.button("Submit"):
-        st.session_state['Conversation_ended'] = True
-        st.session_state['Ending_conversation'] = False
-        st.rerun()
+        with col2:
+            placeholder_for_radio2 = st.radio("Would you like to receive a copy of the conversation per email?", ["Yes", "No"], horizontal=True, key="mail_my_result", index=None)
+        
+        if st.button("Submit"):
+            st.session_state['Conversation_ended'] = True
+            st.session_state['Ending_conversation'] = False
+            st.rerun()
 
 
 def conversation_ended():
@@ -254,14 +257,17 @@ if st.session_state['Valid_input'] and not st.session_state['Conversation_ended'
         st.session_state.messages.append({"role": "user", "content": prompt})
         st.chat_message("user").write(prompt)
 
-        # Create new thread
-        if "Thread_id" not in st.session_state:
-            create_new_thread()
+        if RUN_MODE == "Production":
+            # Create new thread
+            if "Thread_id" not in st.session_state:
+                create_new_thread()
 
 
-        # Display loading symbol while getting response from gpt-model
-        with st.spinner('Thinking...'):
-            msg = query_assistant(prompt)
+            # Display loading symbol while getting response from gpt-model
+            with st.spinner('Thinking...'):
+                msg = query_assistant(prompt)
+        else:
+            msg = "Currently just testing the user interface..."
         
         st.session_state.messages.append({"role": "assistant", "content": msg})
         st.chat_message("assistant").write(msg)
