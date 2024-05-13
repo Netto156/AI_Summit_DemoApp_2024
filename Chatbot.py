@@ -15,39 +15,52 @@ EMAIL_SENDER = st.secrets["email"]
 
 # -----------------------------------------------------------------------------
 
-MARKDOWN_CSS = """
-    div[data-testid="stMarkdown"] > p {
-        font-size: x-large;
-        font-family: sans-serif;
-        }
-"""
-
 MAIN_CSS = """
     div[data-testid="stFullScreenFrame"] > div {
         justify-content: center;
-        }
-    div[data-testid="stVerticalBlock"] > div[data-testid="element-container"] {
+    }
+
+    div.CenterElem {
         text-align: center;
     }
-    div[data-testid="stChatMessage"] {
-        text-align: "left";
-    }
-"""
 
-FORM_CSS = """
-    div[data-testid="stMarkdown"] > div > p {
+    div.FormHeader {
+        text-align: center;
         font-size: x-large;
         color: #fe5000;
         font-weight: bolder;
+        padding:30px;
     }
 
-    div[data-testid="stVerticalBlock"] {
+    h1 {
         text-align: center;
     }
 
     p {
         font-family: sans-serif;
+        font-size: large;
+    }
+
+    
+    div[data-testid="stLinkButton"] p {
         font-weight: bolder;
+        font-size: medium;
+        color:#000;
+    }
+
+    div[data-testid="stFormSubmitButton"] p,
+    div[data-testid="stTextInput"] p,
+    div[data-testid="stButton"] p,
+    div[data-testid="stRadio"] > label p  {
+        font-weight: bolder;
+        font-size: large;
+        color:#000;
+    }
+
+    div.FormBox{
+        border: 1px solid rgba(49, 51, 63, 0.2);
+        border-radius: 0.5rem;
+        padding: calc(1em - 1px);
     }
 """
 
@@ -84,10 +97,6 @@ def validate_user_input():
     # Validate last name
     if data_valid:
         data_valid = len(st.session_state['last_name']) >= 3
-
-    # Validate company
-    if data_valid:
-        data_valid = len(st.session_state['Company']) >= 3
 
     # DEBUG
     data_valid = True
@@ -143,12 +152,12 @@ def mail_conversation():
 def get_user_info():
     print("getting user info")
     st.session_state['Form_count'] += 1
+    st.markdown("""<div class='FormHeader'/>Please enter your contact details to continue""" , unsafe_allow_html=True)
     placeholder = st.empty()
-    with placeholder.form(key="user_input_{0}".format(st.session_state['Form_count'])):
-        with stylable_container(key="Start_dialog", css_styles=FORM_CSS):
 
-            st.markdown("Please enter your contact details to continue")
-            st.text_input("Company", placeholder="Enter the name of your company", key="Company")
+    with placeholder.form(key="user_input_{0}".format(st.session_state['Form_count'])):
+        with stylable_container(key="Start_dialog", css_styles=MAIN_CSS):
+
             st.text_input("First name", placeholder="Enter your first name", key="first_name")
             st.text_input("Last name", placeholder="Enter your last name", key="last_name")
             st.text_input("Email", placeholder="Enter your email", key="email")
@@ -187,13 +196,13 @@ def end_the_conversation():
     print("ending conv..")
     # placeholder_for_radio1 = st.radio("Did you like this tool?", ["Yes", "No"], key="liked", index=None)
     # placeholder_for_radio2 = st.radio("Would you like to receive a copy of the conversation per email?", ["Yes", "No"], horizontal=True, key="mail_my_result", index=None)
-    st.markdown("Result of the conversation")
-    # col1, col2 = st.columns(2)
-    # with col1:
-    placeholder_for_radio1 = st.radio("Did you like this tool?", ["Yes", "No"], key="liked", index=None)
+    st.markdown("""<div class='FormHeader'/>Feedback on the conversation""" , unsafe_allow_html=True)
+    col1, col2 = st.columns(2)
+    with col1:
+        placeholder_for_radio1 = st.radio("Did you like this tool?", ["Yes", "No"], key="liked", index=None)
 
-    # with col2:
-    placeholder_for_radio2 = st.radio("Would you like to receive a copy of the conversation per email?", ["Yes", "No"], horizontal=True, key="mail_my_result", index=None)
+    with col2:
+        placeholder_for_radio2 = st.radio("Would you like to receive a copy of the conversation per email?", ["Yes", "No"], horizontal=True, key="mail_my_result", index=None)
     
     print(st.session_state)
     if st.button("Submit"):
@@ -204,11 +213,12 @@ def end_the_conversation():
 
 
 def conversation_ended():
-    with stylable_container(key="Final_dialog", css_styles=MARKDOWN_CSS):
+    with stylable_container(key="Final_dialog", css_styles=MAIN_CSS):
         st.markdown("Thank you for your time, we hope you found this usefull")
         st.link_button("See other succes stories", "https://www.incentro.com/en")
     
     # st.markdown("Thank you for your time, we hope you found this usefull")
+
 
 
 # This is needed to make sure you do not lose your session variables (pretty weird, I know....)
@@ -219,7 +229,7 @@ for x,y in st.session_state.items():
 with stylable_container(key="main_page", css_styles=MAIN_CSS):
     st.image("https://0097f9ca.flyingcdn.com/wp-content/uploads/2022/04/Incentro-logo-2018-Orange-1024x174.png", width=200)
     st.title("Hyper Automation Discoverer")
-    st.caption("🤖 A chatbot to help you discovery you automation potential 🚀")
+    st.caption("""<div class='CenterElem'/> 🤖 A chatbot to help you discovery you automation potential 🚀""", unsafe_allow_html=True)
 
 # Initialize variables
 if "Valid_input" not in st.session_state:
@@ -228,9 +238,6 @@ if "Valid_input" not in st.session_state:
     st.session_state['Conversation_ended'] = False
     st.session_state['Form_count'] = 0
     st.session_state['Ending_conversation'] = False
-
-    create_new_thread()
-
 
 # Get user input before starting the chat
 if st.session_state['Valid_input'] == False:
@@ -258,6 +265,11 @@ if st.session_state['Valid_input'] and not st.session_state['Conversation_ended'
     if prompt := st.chat_input():
         st.session_state.messages.append({"role": "user", "content": prompt})
         st.chat_message("user").write(prompt)
+
+        # Create new thread
+        # if not st.session_state['Thread_id']:
+            # create_new_thread()
+
 
         # Display loading symbol while getting response from gpt-model
         with st.spinner('Thinking...'):
