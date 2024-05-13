@@ -2,3 +2,6 @@
 base="light"
 primaryColor= "#fe5000"
 textColor="#000000"
+
+[server]
+enableStaticServing = true

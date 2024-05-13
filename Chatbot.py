@@ -14,7 +14,7 @@ EMAIL_PW = st.secrets["email_pw"]
 EMAIL_SENDER = st.secrets["email"]
 
 # Get CSS styling
-with open( ".app\style.css" ) as css:
+with open( "app/static/style.css" ) as css:
     MAIN_CSS = css.read()
 
 #  ------------------------ Logic ---------------------------------------------
