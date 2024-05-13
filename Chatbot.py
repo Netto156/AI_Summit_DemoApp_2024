@@ -255,7 +255,7 @@ if st.session_state['Valid_input'] and not st.session_state['Conversation_ended'
         st.chat_message("user").write(prompt)
 
         # Create new thread
-        if not st.session_state['Thread_id']:
+        if "Thread_id" not in st.session_state:
             create_new_thread()
 
 
