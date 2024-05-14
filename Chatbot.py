@@ -256,6 +256,7 @@ if "Valid_input" not in st.session_state:
     st.session_state['Conversation_ended'] = False
     st.session_state['Form_count'] = 0
     st.session_state['Ending_conversation'] = False
+    st.session_state['added_to_db'] = False
 
 # Get user input before starting the chat
 if st.session_state['Valid_input'] == False:
@@ -309,6 +310,8 @@ if st.session_state['Valid_input'] and not st.session_state['Conversation_ended'
 # Conversation has ended and last pop-up was filled in
 if st.session_state['Conversation_ended']:
     print(st.session_state)
-    mail_conversation()
-    insert_into_DB()
+    if not st.session_state['added_to_db']:
+        mail_conversation()
+        insert_into_DB()
+        st.session_state['added_to_db'] = True
     conversation_ended()
