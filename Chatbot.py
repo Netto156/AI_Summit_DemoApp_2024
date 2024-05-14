@@ -5,14 +5,17 @@ import time
 from email.message import EmailMessage
 import smtplib
 from streamlit_extras.stylable_container import stylable_container
+import os
+from supabase import create_client, Client
+
+
 # python -m streamlit run Chatbot.py
 
 # Set constants
 MODEL_ID = st.secrets["model_id"]
 API_KEY = st.secrets["api_key"]
-EMAIL_PW = st.secrets["email_pw"]
-EMAIL_SENDER = st.secrets["email"]
 RUN_MODE = st.secrets["run_mode"]
+NAME_DB = st.secrets["db_name"]
 
 MAIN_CSS = """ 
     div[data-testid="stFullScreenFrame"] > div {
@@ -71,6 +74,28 @@ def get_client():
 CLIENT = get_client()
 
 
+@st.cache_resource
+def connect_to_DB():
+    url = st.secrets["supabase_url"]
+    key = st.secrets["supabase_key"]
+    db_connection: Client = create_client(url, key)
+    return db_connection
+
+SUPABASE = connect_to_DB()
+
+
+def insert_into_DB():
+    input_data ={
+        "first_name": st.session_state["first_name"],
+        "last_name": st.session_state["last_name"],
+        "email": st.session_state["email"],
+        "liked_demo": st.session_state["liked"] == "Yes",
+        "email_sent": st.session_state["mail_my_result"] == "Yes",
+        "thread_id": st.session_state["Thread_id"]
+        }
+    data, count = SUPABASE.table(NAME_DB).insert(input_data).execute()
+
+
 def create_new_thread():
     print("Creating new thread id....")
     thread = CLIENT.beta.threads.create()
@@ -94,7 +119,9 @@ def validate_user_input():
     if data_valid:
         data_valid = len(st.session_state['last_name']) >= 3
 
-    data_valid=True
+    if RUN_MODE == "Debug":
+        data_valid=True
+        
     # Assign output
     st.session_state['Valid_input'] = data_valid
     return
@@ -169,8 +196,8 @@ def get_user_info():
 
 def send_email(recipient, message):
     print("sneding mail to: "+ recipient)
-    sender = EMAIL_SENDER
-    password = EMAIL_PW
+    sender = st.secrets["email"]
+    password = st.secrets["email_pw"]
 
     message = """Incentro thanks you for your interest in their demo at the UiPath AI summit.\nHereby you receive a copy of your conversation with our chatbot.\n\n""" + message + """\n\nPlease feel welcome to reach out.\n\nWith kind regards the AI-summit-bot @ incentrp"""
 
@@ -266,7 +293,9 @@ if st.session_state['Valid_input'] and not st.session_state['Conversation_ended'
             # Display loading symbol while getting response from gpt-model
             with st.spinner('Thinking...'):
                 msg = query_assistant(prompt)
-        else:
+            
+        else: # Debugging:
+            st.session_state["Thread_id"] = "debug_test"
             msg = "Currently just testing the user interface..."
         
         st.session_state.messages.append({"role": "assistant", "content": msg})
@@ -279,5 +308,7 @@ if st.session_state['Valid_input'] and not st.session_state['Conversation_ended'
 
 # Conversation has ended and last pop-up was filled in
 if st.session_state['Conversation_ended']:
+    print(st.session_state)
     mail_conversation()
+    insert_into_DB()
     conversation_ended()

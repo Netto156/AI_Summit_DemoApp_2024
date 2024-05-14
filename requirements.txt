@@ -1,4 +1,5 @@
 streamlit>=1.28
-openai==1.14.3
+openai>=1.29.0
 streamlit-feedback
 streamlit-extras==0.4.2
+supabase==2.4.5
