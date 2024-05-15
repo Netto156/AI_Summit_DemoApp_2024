@@ -85,15 +85,22 @@ SUPABASE = connect_to_DB()
 
 
 def insert_into_DB():
-    input_data ={
-        "first_name": st.session_state["first_name"],
-        "last_name": st.session_state["last_name"],
-        "email": st.session_state["email"],
-        "liked_demo": st.session_state["liked"] == "Yes",
-        "email_sent": st.session_state["mail_my_result"] == "Yes",
-        "thread_id": st.session_state["Thread_id"]
-        }
-    data, count = SUPABASE.table(NAME_DB).insert(input_data).execute()
+    if "sql_record_id" not in st.session_state:
+        input_data ={
+            "first_name": st.session_state["first_name"],
+            "last_name": st.session_state["last_name"],
+            "email": st.session_state["email"],
+            "liked_demo": None,
+            "email_sent": None,
+            "thread_id": st.session_state["Thread_id"]
+            }
+        data, count = SUPABASE.table(NAME_DB).insert(input_data).execute()
+        st.session_state["sql_record_id"] = data[1][0]['id']
+    else:
+        data, count = SUPABASE.table(NAME_DB).upsert({'id': st.session_state["sql_record_id"], 
+                                                          'liked_demo':st.session_state["liked"] == "Yes", 
+                                                          'email_sent': st.session_state["mail_my_result"] == "Yes"}
+                                                          ).execute()
 
 
 def create_new_thread():
@@ -166,7 +173,7 @@ def mail_conversation():
         conversation = ""
         for m in st.session_state['messages']:
             conversation += "--{0} : {1} \n\n".format(m["role"], m["content"])
-        send_email(email, conversation)
+        # send_email(email, conversation)
     return
 
 # ---------------------------------- UI Functions --------------------------------------------
@@ -198,7 +205,7 @@ def get_user_info():
 
 
 def send_email(recipient, message):
-    print("sneding mail to: "+ recipient)
+    print("sending mail to: "+ recipient)
     sender = st.secrets["email"]
     password = st.secrets["email_pw"]
 
@@ -314,14 +321,16 @@ if st.session_state['Valid_input'] and not st.session_state['Conversation_ended'
             # Create new thread
             if "Thread_id" not in st.session_state:
                 create_new_thread()
-
+                insert_into_DB()
 
             # Display loading symbol while getting response from gpt-model
             with st.spinner('Thinking...'):
                 msg = query_assistant(prompt)
             
         else: # Debugging:
-            st.session_state["Thread_id"] = "debug_test"
+            if "Thread_id" not in st.session_state:
+                st.session_state["Thread_id"] = "debug_test"
+                insert_into_DB()
             msg = "Currently just testing the user interface..."
         
         st.session_state.messages.append({"role": "assistant", "content": msg})
