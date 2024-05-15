@@ -246,6 +246,8 @@ hide_streamlit_style = """
             <style>
             #MainMenu {visibility: hidden;}
             footer {visibility: hidden;}
+            header[data-testid="stHeader"] {visibility: hidden;}
+            div[class*="viewerBadge_link"]
             </style>
             """
 st.markdown(hide_streamlit_style, unsafe_allow_html=True) 
