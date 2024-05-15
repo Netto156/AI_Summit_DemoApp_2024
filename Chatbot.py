@@ -174,7 +174,10 @@ def mail_conversation():
 def get_user_info():
     print("getting user info")
     st.session_state['Form_count'] += 1
-    st.markdown("""<div class='FormHeader'/>Please enter your contact details to continue""" , unsafe_allow_html=True)
+    st.caption(" ")
+    # st.caption("Discover potential hyperautomation use cases, by asking an AI powered bot for advice. Fill in your details in the form below and get started!")
+    # st.markdown("<div class='FormHeader'/> You now have the unique opportunity to chat to an AI powered bot to ask for advice on your hyperautomation strategy. Fill in your details in the form below, get redirected to the chatbot and ask away!/", unsafe_allow_html=True)
+    # st.markdown("""<div class='FormHeader'/>Please enter your contact details to continue""", unsafe_allow_html=True)
     placeholder = st.empty()
 
     with placeholder.form(key="user_input_{0}".format(st.session_state['Form_count'])):
@@ -244,13 +247,13 @@ for x,y in st.session_state.items():
 # ---------------------------------- UI Main page --------------------------------------------
 hide_streamlit_style = """
             <style>
-            #MainMenu {visibility: hidden;}
-            footer {visibility: hidden;}
-                header[data-testid="stHeader"] {visibility: hidden;}
-                div[class*="viewerBadge_link"]
-            footer {
+            #MainMenu,
+            footer,
+            header[data-testid="stHeader"],
+            div[class*="viewerBadge_link"]{
                 visibility: hidden;    
             }
+            div[class*="viewerBadge_link"]:after,
             footer:after {
                 content:'goodbye'; 
                 visibility: visible;
@@ -268,8 +271,8 @@ st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 
 with stylable_container(key="main_page", css_styles=MAIN_CSS):
     st.image("https://0097f9ca.flyingcdn.com/wp-content/uploads/2022/04/Incentro-logo-2018-Orange-1024x174.png", width=200)
-    st.title("The Hyperautomation discovery bot")
-    st.caption("""<div class='CenterElem'/> 🤖 A chatbot that helps you to discovery automation use cases 🚀""", unsafe_allow_html=True)
+    st.title("Chat with Hypee!")
+    st.caption("""<div class='CenterElem'/>Our chatbot 🤖 is a hyperautomation expert and loves to help you identify potential (AI) use cases. Fill in your details in the form below and get started!""", unsafe_allow_html=True)
 
 # Initialize variables
 if "Valid_input" not in st.session_state:
@@ -296,7 +299,7 @@ if st.session_state['Ending_conversation']:
 # Start chat with user
 if st.session_state['Valid_input'] and not st.session_state['Conversation_ended'] and not st.session_state['Ending_conversation']:
     if "messages" not in st.session_state:
-        st.session_state["messages"] = [{"role": "assistant", "content": "Hi {0}, I'd like to help you discovery your automation potential. In what branch do you work?".format(st.session_state.first_name)}]
+        st.session_state["messages"] = [{"role": "assistant", "content": "Hi {0}, I'd like to help you discover your automation potential. In what branch do you work?".format(st.session_state.first_name)}]
 
     # write chat messages
     for msg in st.session_state.messages:
