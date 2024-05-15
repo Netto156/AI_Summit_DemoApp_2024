@@ -166,7 +166,7 @@ def mail_conversation():
         conversation = ""
         for m in st.session_state['messages']:
             conversation += "--{0} : {1} \n\n".format(m["role"], m["content"])
-        # send_email(email, conversation)
+        send_email(email, conversation)
     return
 
 # ---------------------------------- UI Functions --------------------------------------------
@@ -242,12 +242,19 @@ for x,y in st.session_state.items():
 
 
 # ---------------------------------- UI Main page --------------------------------------------
+hide_streamlit_style = """
+            <style>
+            #MainMenu {visibility: hidden;}
+            footer {visibility: hidden;}
+            </style>
+            """
+st.markdown(hide_streamlit_style, unsafe_allow_html=True) 
 
 
 with stylable_container(key="main_page", css_styles=MAIN_CSS):
     st.image("https://0097f9ca.flyingcdn.com/wp-content/uploads/2022/04/Incentro-logo-2018-Orange-1024x174.png", width=200)
-    st.title("Hyper Automation Discoverer")
-    st.caption("""<div class='CenterElem'/> 🤖 A chatbot to help you discovery you automation potential 🚀""", unsafe_allow_html=True)
+    st.title("The Hyperautomation discovery bot")
+    st.caption("""<div class='CenterElem'/> 🤖 A chatbot that helps you to discovery automation use cases 🚀""", unsafe_allow_html=True)
 
 # Initialize variables
 if "Valid_input" not in st.session_state:
