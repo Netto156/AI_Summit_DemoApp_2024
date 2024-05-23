@@ -609,6 +609,25 @@ def fill_mail_template():
         result += """<tbody><td style="border-collapse:collapse; mso-line-height-rule:exactly; font-family:Arial, sans-serif; font-size:15px; color:#444444; word-break:break-word; padding-left: 20px; padding-right: 20px; padding-bottom: 15px; padding-top: 15px;"><div id="hs_cos_wrapper_module-1-0-1" class="hs_cos_wrapper hs_cos_wrapper_widget hs_cos_wrapper_type_module" style="color: inherit; font-size: inherit; line-height: inherit;" data-hs-cos-general-type="widget" data-hs-cos-type="module"><div id="hs_cos_wrapper_module-1-0-1_" class="hs_cos_wrapper hs_cos_wrapper_widget hs_cos_wrapper_type_rich_text" style="color: inherit; font-size: inherit; line-height: inherit;" data-hs-cos-general-type="widget" data-hs-cos-type="rich_text"><h2 style="margin:0; mso-line-height-rule:exactly; font-size:15px; line-height:125%"><span style="font-family: Helvetica, Arial, sans-serif; color: #000000;">{0}</span></h2>
     <p style="mso-line-height-rule:exactly; line-height:175%"><span style="color: #000000;">{1}</span></p></div></div></td></tbody>""".format(role, answer['content'])
     return result
+
+
+def send_email(recipient, message):
+    print("sending mail to: "+ recipient)
+
+    msg = MIMEMultipart('alternative')
+    msg['Subject'] = "Recap of conversation with Hypee - UiPath AI Summit"
+    msg['From'] = st.secrets["email"]
+    msg['To'] = recipient
+    content = MIMEText(message, 'html')
+    msg.attach(content)
+
+    with smtplib.SMTP("smtp.gmail.com", port=587) as smtp:
+        smtp.starttls()
+        print(st.secrets["email"])
+        smtp.login(st.secrets["email"], st.secrets["email_pw"])
+        smtp.sendmail(st.secrets["email"], recipient, msg.as_string())
+        smtp.quit()
+
 # ---------------------------------- UI Functions --------------------------------------------
 
 def get_user_info():
@@ -638,24 +657,6 @@ def get_user_info():
             if submit_button:
                 placeholder.empty()
     return
-
-
-def send_email(recipient, message):
-    print("sending mail to: "+ recipient)
-
-    msg = MIMEMultipart('alternative')
-    msg['Subject'] = "Recap of conversation with Hypee - UiPath AI Summit"
-    msg['From'] = st.secrets["email"]
-    msg['To'] = recipient
-    content = MIMEText(message, 'html')
-    msg.attach(content)
-
-    with smtplib.SMTP("smtp-mail.outlook.com", port=587) as smtp:
-        smtp.starttls()
-        print(st.secrets["email"])
-        smtp.login(st.secrets["email"], st.secrets["email_pw"])
-        smtp.sendmail(st.secrets["email"], recipient, msg.as_string())
-        smtp.quit()
 
 
 def end_the_conversation():
