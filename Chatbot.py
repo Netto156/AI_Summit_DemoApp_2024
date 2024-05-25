@@ -681,7 +681,11 @@ def conversation_ended():
         if st.session_state['mail_my_result'] == 'Yes':
             st.markdown("You will receive a copy of your conversation shortly, please also check your spam inbox")
         st.link_button("See other succes stories", "https://www.incentro.com/en")
-    
+
+def display_chat_messages():    
+    for msg in st.session_state.messages:
+        st.chat_message(msg["role"]).write(msg["content"])
+
 
 # This is needed to make sure you do not lose your session variables (pretty weird, I know....)
 for x,y in st.session_state.items():
@@ -721,42 +725,62 @@ if st.session_state['Ending_conversation']:
 
 
 # Start chat with user
-if st.session_state['Valid_input'] and not st.session_state['Conversation_ended'] and not st.session_state['Ending_conversation']:
-    if "messages" not in st.session_state:
-        st.session_state["messages"] = [{"role": "assistant", "content": "Hi {0}, I'd like to help you discover your automation potential. In what branch do you work?".format(st.session_state.first_name)}]
+with st.container():
+    if st.session_state['Valid_input'] and not st.session_state['Conversation_ended'] and not st.session_state['Ending_conversation']:
+        if "messages" not in st.session_state:
+            st.session_state["messages"] = [{"role": "assistant", "content": "Hi {0}, I'd like to help you discover your automation potential. In what branch do you work?".format(st.session_state.first_name)}]
 
-    # write chat messages
-    for msg in st.session_state.messages:
-        st.chat_message(msg["role"]).write(msg["content"])
+        # Display chat messages initially
+        chat_placeholder = st.empty()
+        with chat_placeholder.container():
+            display_chat_messages()
 
-    # Get user input 
-    if prompt := st.chat_input():
-        st.session_state.messages.append({"role": "user", "content": prompt})
-        st.chat_message("user").write(prompt)
+        # Spinner placeholder
+        spinner_placeholder = st.empty()
 
-        if RUN_MODE == "Production":
-            # Create new thread
-            if "Thread_id" not in st.session_state:
-                create_new_thread()
-                insert_into_DB()
+        # End conversation
+        if st.button("End conversation", type="primary"):
+            st.session_state["Ending_conversation"] = True
+            st.rerun()
 
-            # Display loading symbol while getting response from gpt-model
-            with st.spinner('Thinking...'):
-                msg = query_assistant(prompt)
-            
-        else: # Debugging:
-            if "Thread_id" not in st.session_state:
-                st.session_state["Thread_id"] = "debug_test"
-                insert_into_DB()
-            msg = "Currently just testing the user interface..."
-        
-        st.session_state.messages.append({"role": "assistant", "content": msg})
-        st.chat_message("assistant").write(msg)
+        # Input container to ensure it stays at the bottom
+        st.markdown("<div style='margin-top: 20px;'></div>", unsafe_allow_html=True)        
+        input_container = st.container()
+    
+        # Get user input 
+        with input_container:
+            if prompt := st.chat_input():
+                st.session_state.messages.append({"role": "user", "content": prompt})
 
-    # End conversation
-    if st.button("End conversation", type="primary"):
-        st.session_state["Ending_conversation"] = True
-        st.rerun()
+                # Force refresh chat messages to include the new user message
+                chat_placeholder.empty()
+                with chat_placeholder.container():
+                    display_chat_messages()
+
+                with spinner_placeholder:
+                    with st.spinner('Thinking...'):
+                        if RUN_MODE == "Production":
+                            # Create new thread
+                            if "Thread_id" not in st.session_state:
+                                create_new_thread()
+                                insert_into_DB()
+                            msg = query_assistant(prompt)
+                            
+                        else: # Debugging:
+                            if "Thread_id" not in st.session_state:
+                                st.session_state["Thread_id"] = "debug_test"
+                                insert_into_DB()
+                            msg = "Currently just testing the user interface..."
+                        
+                        st.session_state.messages.append({"role": "assistant", "content": msg})
+
+                        # Force refresh chat messages to include the new assistant message
+                        chat_placeholder.empty()
+                        with chat_placeholder.container():
+                            display_chat_messages()          
+
+                        # Clear the spinner
+                        spinner_placeholder.empty()                              
 
 # Conversation has ended and last pop-up was filled in
 if st.session_state['Conversation_ended']:
