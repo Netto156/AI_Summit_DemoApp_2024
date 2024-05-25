@@ -731,12 +731,12 @@ with st.container():
             st.session_state["messages"] = [{"role": "assistant", "content": "Hi {0}, I'd like to help you discover your automation potential. In what branch do you work?".format(st.session_state.first_name)}]
 
         # Display chat messages initially
-        chat_placeholder = st.empty()
-        with chat_placeholder.container():
+        chat_container = st.empty()
+        with chat_container.container():
             display_chat_messages()
 
-        # Spinner placeholder
-        spinner_placeholder = st.empty()
+        # Place spinner element (hidden by default)
+        spinner_element = st.empty()
 
         # End conversation
         if st.button("End conversation", type="primary"):
@@ -753,11 +753,11 @@ with st.container():
                 st.session_state.messages.append({"role": "user", "content": prompt})
 
                 # Force refresh chat messages to include the new user message
-                chat_placeholder.empty()
-                with chat_placeholder.container():
+                chat_container.empty()
+                with chat_container.container():
                     display_chat_messages()
 
-                with spinner_placeholder:
+                with spinner_element:
                     with st.spinner('Thinking...'):
                         if RUN_MODE == "Production":
                             # Create new thread
@@ -775,12 +775,12 @@ with st.container():
                         st.session_state.messages.append({"role": "assistant", "content": msg})
 
                         # Force refresh chat messages to include the new assistant message
-                        chat_placeholder.empty()
-                        with chat_placeholder.container():
+                        chat_container.empty()
+                        with chat_container.container():
                             display_chat_messages()          
 
                         # Clear the spinner
-                        spinner_placeholder.empty()                              
+                        spinner_element.empty()                              
 
 # Conversation has ended and last pop-up was filled in
 if st.session_state['Conversation_ended']:
