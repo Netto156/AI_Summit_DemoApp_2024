@@ -428,8 +428,8 @@ MAIN_CSS = """
 
     p {
         font-family: sans-serif;
-        font-size: large;
-    }
+        font-size: medium;
+     }
 
     div[data-testid="stLinkButton"] p {
         font-weight: bolder;
@@ -464,6 +464,10 @@ MAIN_CSS = """
         background-color: #fe5000;
         width:100%;
         border: 2px solid black;
+        font-size:medium;
+}
+    button[kind="primary"] p{
+        font-size:medium;
 }"""
 
 hide_streamlit_style = """
